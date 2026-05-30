@@ -1,0 +1,120 @@
+//Sistema de control de ventas
+using System;
+using System.IO;
+
+class Ejercicio5_ControlVentas
+{
+    static string archivo = "ventas.csv";
+
+    static void Main()
+    {
+        bool salir = false;
+        while (!salir)
+        {
+            Console.WriteLine("\n--- Ejercicio 5: Sistema de control de ventas ---");
+            Console.WriteLine("1. Registrar venta");
+            Console.WriteLine("2. Ver total de ventas");
+            Console.WriteLine("0. Salir");
+            Console.Write("Seleccione una opción: ");
+            string opcion = Console.ReadLine();
+
+            switch (opcion)
+            {
+                case "1": RegistrarVenta(); break;
+                case "2": MostrarVentas(); break;
+                case "0": salir = true; break;
+                default: Console.WriteLine("Opción no válida."); break;
+            }
+        }
+    }
+
+    static void RegistrarVenta()
+    {
+        Console.Write("\n¿Cuántas ventas desea registrar? ");
+        if (!int.TryParse(Console.ReadLine(), out int cantidad) || cantidad <= 0)
+        {
+            Console.WriteLine("Cantidad inválida.");
+            return;
+        }
+
+        using (StreamWriter sw = new StreamWriter(archivo, append: true))
+        {
+            for (int i = 0; i < cantidad; i++)
+            {
+                Console.WriteLine($"\nVenta {i + 1}:");
+
+                Console.Write("  Producto: ");
+                string producto = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(producto))
+                {
+                    Console.WriteLine("  Producto vacío. Registro omitido.");
+                    continue;
+                }
+
+                Console.Write("  Cantidad vendida: ");
+                if (!int.TryParse(Console.ReadLine(), out int cant) || cant <= 0)
+                {
+                    Console.WriteLine("  Cantidad inválida. Registro omitido.");
+                    continue;
+                }
+
+                Console.Write("  Precio unitario: ");
+                if (!double.TryParse(Console.ReadLine(), out double precio) || precio < 0)
+                {
+                    Console.WriteLine("  Precio inválido. Registro omitido.");
+                    continue;
+                }
+
+                // DateTime.Now.ToShortDateString() devuelve la fecha actual (solo día/mes/año)
+                string fecha = DateTime.Now.ToShortDateString();
+
+                // Guardar en formato CSV: producto,cantidad,precio,fecha
+                sw.WriteLine($"{producto},{cant},{precio},{fecha}");
+                Console.WriteLine("  Venta guardada.");
+            }
+        }
+    }
+
+    static void MostrarVentas()
+    {
+        if (!File.Exists(archivo))
+        {
+            Console.WriteLine("\nNo hay ventas registradas.");
+            return;
+        }
+
+        string[] lineas = File.ReadAllLines(archivo);
+
+        if (lineas.Length == 0)
+        {
+            Console.WriteLine("\nEl archivo está vacío.");
+            return;
+        }
+
+        Console.WriteLine($"\n{"Producto",-20} {"Cantidad",8} {"Precio",10} {"Subtotal",12} {"Fecha",12}");
+        Console.WriteLine(new string('-', 66));
+
+        double totalVentas = 0;
+        int conteo = 0;
+
+        foreach (string linea in lineas)
+        {
+            string[] campos = linea.Split(',');
+            if (campos.Length != 4) continue;
+
+            if (!int.TryParse(campos[1], out int cant)) continue;
+            if (!double.TryParse(campos[2], out double precio)) continue;
+
+            double subtotal = cant * precio;
+            Console.WriteLine($"{campos[0],-20} {cant,8} {precio,10:F2} {subtotal,12:F2} {campos[3],12}");
+            totalVentas += subtotal;
+            conteo++;
+        }
+
+        if (conteo > 0)
+        {
+            Console.WriteLine(new string('-', 66));
+            Console.WriteLine($"Total de ventas: {totalVentas:F2}");
+        }
+    }
+}
