@@ -1,0 +1,107 @@
+//Monitoreo de temperaturas
+using System;
+using System.IO;
+
+class Ejercicio7_Temperaturas
+{
+    static string archivo = "temperaturas.csv";
+
+    // Los días de la semana son fijos, siempre son 7
+    static string[] dias = { "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo" };
+
+    static void Main()
+    {
+        bool salir = false;
+        while (!salir)
+        {
+            Console.WriteLine("\n--- Ejercicio 7: Monitoreo de temperaturas ---");
+            Console.WriteLine("1. Registrar temperaturas de la semana");
+            Console.WriteLine("2. Ver promedio semanal");
+            Console.WriteLine("0. Salir");
+            Console.Write("Seleccione una opción: ");
+            string opcion = Console.ReadLine();
+
+            switch (opcion)
+            {
+                case "1": RegistrarTemperaturas(); break;
+                case "2": MostrarPromedio(); break;
+                case "0": salir = true; break;
+                default: Console.WriteLine("Opción no válida."); break;
+            }
+        }
+    }
+
+    static void RegistrarTemperaturas()
+    {
+        Console.WriteLine("\nIngrese la temperatura de cada día (en °C):\n");
+
+        using (StreamWriter sw = new StreamWriter(archivo, append: true))
+        {
+            foreach (string dia in dias)
+            {
+                double temperatura;
+                bool valido = false;
+
+                // Repetir hasta que el usuario ingrese un número válido
+                do
+                {
+                    Console.Write($"  {dia}: ");
+                    if (double.TryParse(Console.ReadLine(), out temperatura))
+                    {
+                        valido = true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("  Valor inválido. Ingrese un número (ejemplo: 28.5)");
+                    }
+                } while (!valido);
+
+                // Guardar en formato CSV: día,temperatura
+                sw.WriteLine($"{dia},{temperatura}");
+            }
+        }
+
+        Console.WriteLine("\nTemperaturas guardadas.");
+    }
+
+    static void MostrarPromedio()
+    {
+        if (!File.Exists(archivo))
+        {
+            Console.WriteLine("\nNo hay temperaturas registradas.");
+            return;
+        }
+
+        string[] lineas = File.ReadAllLines(archivo);
+
+        if (lineas.Length == 0)
+        {
+            Console.WriteLine("\nEl archivo está vacío.");
+            return;
+        }
+
+        Console.WriteLine($"\n{"Día",-12} {"Temperatura",15}");
+        Console.WriteLine(new string('-', 30));
+
+        double sumaTotal = 0;
+        int conteo = 0;
+
+        foreach (string linea in lineas)
+        {
+            string[] campos = linea.Split(',');
+            if (campos.Length != 2) continue;
+
+            if (!double.TryParse(campos[1], out double temp)) continue;
+
+            Console.WriteLine($"{campos[0],-12} {temp,12:F1} °C");
+            sumaTotal += temp;
+            conteo++;
+        }
+
+        if (conteo > 0)
+        {
+            Console.WriteLine(new string('-', 30));
+            Console.WriteLine($"Promedio semanal: {sumaTotal / conteo:F1} °C");
+        }
+    }
+}
